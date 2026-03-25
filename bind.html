@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>綁定會員帳號 - 小米獅童裝</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .bind-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 360px;
+            width: 100%;
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .title { font-size: 24px; color: #333; margin-bottom: 10px; font-weight: bold; }
+        .subtitle { color: #666; font-size: 15px; margin-bottom: 30px; line-height: 1.5; }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        .bind-btn {
+            background: linear-gradient(90deg, #00B900, #00D300);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .bind-btn:hover { transform: translateY(-2px); }
+        .bind-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="bind-card">
+        <div class="logo">🦁</div>
+        <div class="title">領取新會員積分</div>
+        <div class="subtitle">輸入註冊手機號碼，即可綁定 LINE 領取點數</div>
+        
+        <input 
+            type="tel" 
+            id="phoneInput" 
+            placeholder="請輸入手機號碼（09xxxxxxxx）" 
+            maxlength="10"
+        />
+        
+        <button id="bindBtn" class="bind-btn" onclick="bindAccount()">
+            🎁 立即綁定領取 50 點
+        </button>
+        
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        let liffProfile = null;
+        
+        // 您的反向綁定 LIFF ID
+        const LIFF_ID = "2009605305-fRjX8tPu";
+        // 稍後會建立的 n8n webhook URL
+        const N8N_WEBHOOK_URL = "稍後填入您的n8n-webhook網址";
+
+        async function initLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+                
+                liffProfile = await liff.getProfile();
+                console.log('LINE Profile 載入成功:', liffProfile.displayName);
+                document.getElementById('bindBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('LIFF 初始化失敗:', error);
+                showMessage('系統載入失敗，請重新嘗試', 'error');
+            }
+        }
+
+        async function bindAccount() {
+            const phoneInput = document.getElementById('phoneInput');
+            const phone = phoneInput.value.trim();
+            
+            if (!/^09\d{8}$/.test(phone)) {
+                showMessage('請輸入正確的手機號碼格式（例如：0912345678）', 'error');
+                return;
+            }
+
+            if (!liffProfile) {
+                showMessage('LINE 資料載入中，請稍後再試', 'error');
+                return;
+            }
+
+            const bindBtn = document.getElementById('bindBtn');
+            bindBtn.disabled = true;
+            bindBtn.textContent = '綁定中...';
+
+            // 這部分功能將在 n8n 設定完成後啟用
+            showMessage('反向綁定功能將在下個階段啟用', 'success');
+            setTimeout(() => {
+                bindBtn.disabled = false;
+                bindBtn.textContent = '🎁 立即綁定領取 50 點';
+            }, 2000);
+        }
+
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.className = `message ${type}`;
+            msgDiv.style.display = 'block';
+        }
+
+        // 監聽 Enter 鍵
+        document.getElementById('phoneInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                bindAccount();
+            }
+        });
+
+        window.addEventListener('load', initLiff);
+    </script>
+</body>
+</html>
