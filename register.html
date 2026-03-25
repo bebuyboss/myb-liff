@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小米獅童裝 - 會員註冊</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .loading-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 340px;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo { 
+            font-size: 56px; 
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .brand-name { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #333; 
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .loading-text { 
+            color: #666; 
+            font-size: 16px; 
+            margin-bottom: 8px; 
+        }
+        .subtitle { 
+            color: #999; 
+            font-size: 14px; 
+            font-style: italic; 
+            margin-bottom: 30px; 
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #d32f2f;
+            font-size: 14px;
+            margin-top: 16px;
+            padding: 12px;
+            background: #ffebee;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="logo">🦁</div>
+        <div class="brand-name">小米獅童裝 MYB</div>
+        <div class="loading-text">正在為您準備專屬註冊頁面</div>
+        <div class="subtitle">每一米成長，都勇敢閃亮</div>
+        <div class="spinner"></div>
+        <div id="error-message" class="error"></div>
+    </div>
+
+    <script>
+        async function initLiffAndRedirect() {
+            try {
+                // 您的註冊轉址 LIFF ID
+                const LIFF_ID = "2009605305-xQL8Mz62";
+                const TALLY_FORM_URL = "https://tally.so/r/eqLDK0";
+
+                console.log('開始初始化 LIFF...');
+                await liff.init({ liffId: LIFF_ID });
+
+                if (!liff.isLoggedIn()) {
+                    console.log('用戶未登入，導向登入頁面');
+                    liff.login();
+                    return;
+                }
+
+                console.log('取得用戶資料中...');
+                const profile = await liff.getProfile();
+                
+                console.log('LINE Profile:', {
+                    userId: profile.userId,
+                    displayName: profile.displayName
+                });
+
+                const redirectUrl = new URL(TALLY_FORM_URL);
+                redirectUrl.searchParams.set('brand', 'MYB');
+                redirectUrl.searchParams.set('source', 'LINE_A');
+                redirectUrl.searchParams.set('line_user_id', profile.userId);
+                redirectUrl.searchParams.set('line_display_name', profile.displayName);
+                
+                if (profile.pictureUrl) {
+                    redirectUrl.searchParams.set('line_picture_url', profile.pictureUrl);
+                }
+
+                console.log('跳轉網址:', redirectUrl.toString());
+                
+                // 短暫延遲讓用戶看到載入畫面
+                setTimeout(() => {
+                    window.location.replace(redirectUrl.toString());
+                }, 800);
+
+            } catch (error) {
+                console.error('LIFF 初始化失敗:', error);
+                
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = '載入失敗，3秒後將跳轉到註冊表單';
+                errorDiv.style.display = 'block';
+                
+                // 容錯機制：跳轉到原始表單
+                setTimeout(() => {
+                    const fallbackUrl = 'https://tally.so/r/eqLDK0?brand=MYB&source=LINE_A';
+                    window.location.replace(fallbackUrl);
+                }, 3000);
+            }
+        }
+
+        window.addEventListener('load', initLiffAndRedirect);
+    </script>
+</body>
+</html>
